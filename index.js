@@ -1,6 +1,37 @@
-const { app, BrowserWindow, session, shell } = require('electron')
+const { app, BrowserWindow, session, shell, screen } = require('electron')
 const path = require('path')
 const fs = require('fs')
+
+// ========== 自动缩放 ==========
+// 页面按 2560x1440 设计，小屏幕自动缩小适配
+const DESIGN_WIDTH = 2560
+const DESIGN_HEIGHT = 1440
+
+function getAutoZoomFactor () {
+  const display = screen.getPrimaryDisplay()
+  const { width, height } = display.workAreaSize
+  const ratio = Math.min(width / DESIGN_WIDTH, height / DESIGN_HEIGHT)
+  const zoom = Math.max(0.4, Math.min(1.0, ratio))
+  console.log(`屏幕: ${width}x${height}, 设计: ${DESIGN_WIDTH}x${DESIGN_HEIGHT}, 自动缩放: ${zoom.toFixed(2)}`)
+  return zoom
+}
+
+function applyZoom (win) {
+  if (!win || win.isDestroyed()) return
+  const zoom = getAutoZoomFactor()
+  win.webContents.setZoomFactor(zoom)
+}
+
+// 屏幕分辨率变化时，对所有窗口重新计算缩放
+function applyZoomToAll () {
+  const zoom = getAutoZoomFactor()
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.setZoomFactor(zoom)
+  }
+  for (const win of controlWindows) {
+    if (!win.isDestroyed()) win.webContents.setZoomFactor(zoom)
+  }
+}
 
 // ========== 调试模式 ==========
 const _debugMode = process.argv.includes('--debug')
@@ -99,6 +130,11 @@ function createMainWindow () {
 
   mainWindow.loadFile(path.join(WEB_ROOT, 'index.html'))
 
+  // ★ 自动缩放：根据屏幕分辨率调整
+  mainWindow.webContents.on('did-finish-load', () => {
+    applyZoom(mainWindow)
+  })
+
   // ★ 拦截导航：点击设备/群控链接时，打开新窗口而不是在当前页导航
   mainWindow.webContents.on('will-navigate', (event, url) => {
     event.preventDefault()
@@ -182,6 +218,11 @@ function openControlWindow (url, sourceWindow) {
     win.loadFile(filePath)
   }
 
+  // ★ 自动缩放：根据屏幕分辨率调整
+  win.webContents.on('did-finish-load', () => {
+    applyZoom(win)
+  })
+
   // ★ 控制窗口也拦截导航（导航栏链接 → 开新窗口）
   win.webContents.on('will-navigate', (event, navUrl) => {
     event.preventDefault()
@@ -250,6 +291,35 @@ app.whenReady().then(() => {
   createMainWindow()
   startMemoryCleanup()
 
+  // ★ 监听屏幕分辨率变化（外接显示器、切换显示器等）
+  screen.on('display-metrics-changed', () => {
+    console.log('屏幕分辨率变化，重新计算缩放')
+    applyZoomToAll()
+  })
+
+  // ★ 手动缩放快捷键：Ctrl+= 放大, Ctrl+- 缩小, Ctrl+0 重置为自动
+  const { globalShortcut } = require('electron')
+  globalShortcut.register('CommandOrControl+=', () => {
+    const win = BrowserWindow.getFocusedWindow()
+    if (win && !win.isDestroyed()) {
+      const current = win.webContents.getZoomFactor()
+      win.webContents.setZoomFactor(Math.min(2.0, current + 0.1))
+    }
+  })
+  globalShortcut.register('CommandOrControl+-', () => {
+    const win = BrowserWindow.getFocusedWindow()
+    if (win && !win.isDestroyed()) {
+      const current = win.webContents.getZoomFactor()
+      win.webContents.setZoomFactor(Math.max(0.3, current - 0.1))
+    }
+  })
+  globalShortcut.register('CommandOrControl+0', () => {
+    const win = BrowserWindow.getFocusedWindow()
+    if (win && !win.isDestroyed()) {
+      applyZoom(win)
+    }
+  })
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createMainWindow()
@@ -259,6 +329,8 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   console.log('所有窗口已关闭，退出应用')
+  const { globalShortcut } = require('electron')
+  globalShortcut.unregisterAll()
   app.quit()
 })
 
