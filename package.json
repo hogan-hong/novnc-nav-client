@@ -11,7 +11,7 @@
   "build": {
     "appId": "com.hogan.novncnav",
     "productName": "NoVNC导航控制台",
-    "asar": true,
+    "asar": false,
     "files": [
       "**/*",
       "!*.md"
@@ -21,8 +21,7 @@
       "buildResources": "resources"
     },
     "win": {
-      "target": ["dir"],
-      "icon": "web/static/favicon.ico"
+      "target": ["dir"]
     }
   },
   "keywords": ["novnc", "vnc", "iphone", "electron"],
