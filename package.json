@@ -17,8 +17,7 @@
       "!*.md"
     ],
     "directories": {
-      "output": "dist",
-      "buildResources": "resources"
+      "output": "dist"
     },
     "win": {
       "target": ["dir"]
