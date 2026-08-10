@@ -140,8 +140,8 @@
             }
         });
         // ----------------- 只加这一个设置剪贴板按钮的点击事件 -----------------
-        SheZhiJianTieBan.addEventListener('click', function() {
-            const text = prompt('请输入要粘贴的文字：');
+        SheZhiJianTieBan.addEventListener('click', async function() {
+            const text = await prompt('请输入要粘贴的文字：');
             if (text && text.trim()) {
                 ['iframe-1', 'iframe-2', 'iframe-3', 'iframe-4', 'iframe-5'].forEach(id => {
                     const targetIframe = document.getElementById(id);

@@ -35,6 +35,62 @@ function applyZoomToAll () {
   }
 }
 
+// ========== window.prompt polyfill ==========
+// Electron 不支持 window.prompt()，用自定义弹窗替代
+function injectPromptPolyfill (win) {
+  if (!win || win.isDestroyed()) return
+  const code = `
+    (function() {
+      if (window.__promptPolyfilled) return;
+      window.__promptPolyfilled = true;
+      window.prompt = function(message, defaultValue) {
+        return new Promise((resolve) => {
+          // 创建遮罩
+          const overlay = document.createElement('div');
+          overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:999999;display:flex;align-items:center;justify-content:center;';
+          // 创建对话框
+          const dialog = document.createElement('div');
+          dialog.style.cssText = 'background:#2b2b2b;border-radius:8px;padding:20px;width:400px;box-shadow:0 4px 20px rgba(0,0,0,0.5);font-family:sans-serif;';
+          const label = document.createElement('div');
+          label.textContent = message || '请输入：';
+          label.style.cssText = 'color:#e0e0e0;font-size:14px;margin-bottom:12px;';
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = defaultValue || '';
+          input.style.cssText = 'width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #555;border-radius:4px;background:#1e1e1e;color:#fff;font-size:14px;outline:none;';
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { cleanup(); resolve(input.value); }
+            if (e.key === 'Escape') { cleanup(); resolve(null); }
+          });
+          const btnRow = document.createElement('div');
+          btnRow.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;margin-top:16px;';
+          const okBtn = document.createElement('button');
+          okBtn.textContent = '确定';
+          okBtn.style.cssText = 'padding:6px 20px;border:none;border-radius:4px;background:#4a9eff;color:#fff;cursor:pointer;font-size:14px;';
+          const cancelBtn = document.createElement('button');
+          cancelBtn.textContent = '取消';
+          cancelBtn.style.cssText = 'padding:6px 20px;border:none;border-radius:4px;background:#555;color:#fff;cursor:pointer;font-size:14px;';
+          btnRow.appendChild(okBtn);
+          btnRow.appendChild(cancelBtn);
+          dialog.appendChild(label);
+          dialog.appendChild(input);
+          dialog.appendChild(btnRow);
+          overlay.appendChild(dialog);
+          document.body.appendChild(overlay);
+          input.focus();
+          function cleanup() {
+            overlay.remove();
+          }
+          okBtn.addEventListener('click', () => { cleanup(); resolve(input.value); });
+          cancelBtn.addEventListener('click', () => { cleanup(); resolve(null); });
+          overlay.addEventListener('click', (e) => { if (e.target === overlay) { cleanup(); resolve(null); } });
+        });
+      };
+    })();
+  `
+  win.webContents.executeJavaScript(code, true).catch(() => {})
+}
+
 // ========== 调试模式 ==========
 const _debugMode = process.argv.includes('--debug')
 let logPath = null
@@ -136,9 +192,10 @@ function createMainWindow () {
 
   mainWindow.loadFile(path.join(WEB_ROOT, 'index.html'))
 
-  // ★ 自动缩放：根据屏幕分辨率调整
+  // ★ 自动缩放 + prompt polyfill
   mainWindow.webContents.on('did-finish-load', () => {
     applyZoom(mainWindow)
+    injectPromptPolyfill(mainWindow)
   })
 
   // ★ 拦截导航：点击设备/群控链接时，打开新窗口而不是在当前页导航
@@ -228,9 +285,10 @@ function openControlWindow (url, sourceWindow) {
     win.loadFile(filePath)
   }
 
-  // ★ 自动缩放：根据屏幕分辨率调整
+  // ★ 自动缩放 + prompt polyfill
   win.webContents.on('did-finish-load', () => {
     applyZoom(win)
+    injectPromptPolyfill(win)
   })
 
   // ★ 控制窗口内导航：所有链接都在当前窗口内跳转，不新建窗口
