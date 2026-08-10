@@ -9,8 +9,10 @@ const DESIGN_HEIGHT = 1440
 
 function getAutoZoomFactor () {
   const display = screen.getPrimaryDisplay()
-  const { width, height } = display.workAreaSize
+  // 用屏幕实际尺寸（不含任务栏），宽度优先——页面是横向铺满设计
+  const { width, height } = display.size
   const ratio = Math.min(width / DESIGN_WIDTH, height / DESIGN_HEIGHT)
+  // 屏幕等于或大于设计尺寸时 100%，小屏幕按比例缩小
   const zoom = Math.max(0.4, Math.min(1.0, ratio))
   console.log(`屏幕: ${width}x${height}, 设计: ${DESIGN_WIDTH}x${DESIGN_HEIGHT}, 自动缩放: ${zoom.toFixed(2)}`)
   return zoom
@@ -121,12 +123,16 @@ function createMainWindow () {
     width: 1200,
     height: 800,
     title: 'NoVNC 控制台',
+    show: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false
     }
   })
+
+  mainWindow.maximize()
+  mainWindow.show()
 
   mainWindow.loadFile(path.join(WEB_ROOT, 'index.html'))
 
@@ -200,6 +206,7 @@ function openControlWindow (url, sourceWindow) {
     width: 1200,
     height: 800,
     title: title,
+    show: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -210,6 +217,9 @@ function openControlWindow (url, sourceWindow) {
       allowRunningInsecureContent: false
     }
   })
+
+  win.maximize()
+  win.show()
 
   // 加载本地 HTML 文件（保留查询参数供页面 JS 读取 IP）
   if (queryStr) {
@@ -223,14 +233,16 @@ function openControlWindow (url, sourceWindow) {
     applyZoom(win)
   })
 
-  // ★ 控制窗口也拦截导航（导航栏链接 → 开新窗口）
+  // ★ 控制窗口内导航：所有链接都在当前窗口内跳转，不新建窗口
   win.webContents.on('will-navigate', (event, navUrl) => {
-    event.preventDefault()
-    openControlWindow(navUrl, win)
+    // 允许当前窗口内导航，不阻止
+    console.log(`控制窗口内导航: ${navUrl}`)
   })
 
   win.webContents.setWindowOpenHandler(({ url: openUrl }) => {
-    openControlWindow(openUrl, win)
+    // target="_blank" 链接也在当前窗口加载
+    console.log(`拦截新窗口请求，改为当前窗口加载: ${openUrl}`)
+    win.loadURL(openUrl)
     return { action: 'deny' }
   })
 
