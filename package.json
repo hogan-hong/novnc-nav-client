@@ -10,7 +10,7 @@
   },
   "build": {
     "appId": "com.hogan.novncnav",
-    "productName": "NoVNC导航控制台",
+    "productName": "NoVNC Nav Client",
     "asar": false,
     "files": [
       "**/*",
