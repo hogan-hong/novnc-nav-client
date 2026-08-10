@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <!-- 必须的 meta 标签 -->
+    <meta charset="utf-8">
+    <link rel="shortcut icon" href="static/favicon.ico">
+    <link rel="stylesheet" href="static/hogan1_853x480.css">
+    <title>iPhone_NoVnc控制</title>
+    <style>
+      body {
+        background-image: url(https://webinput.nie.netease.com/img/xy3d/logo.png); /* 替换为您的图片路径 */
+        background-size: 853px; /* 背景图片覆盖整个容器 */
+        background-repeat: no-repeat; /* 背景图片不重复 */
+        background-color: #CCCCCC;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="static/jquery.slim.min.js"></script>
+    <div id="nav-placeholder"></div>
+    
+
+    <div class="iframe-container" id="myDiv"></div>
+    
+    <script>
+        // 获取查询参数部分
+        var queryString = window.location.search;
+
+        // 解析查询参数为一个对象
+        var params = new URLSearchParams(queryString);
+
+        // 获取变量值
+        var variableValue = params.get('token');
+        var variableValue1 = params.get('IP');
+
+        // 构建 iframe 的 src 属性值
+        var iframeSrc = 'http://neiwang.hogan.ltd:888/vnc_853x480_view.html?path=websockify/?token=' + variableValue;
+
+        // 创建 iframe 元素
+        var iframe = document.createElement('iframe');
+        iframe.src = iframeSrc;
+
+        // 将 iframe 添加到容器中
+        var iframeContainer = document.getElementById('myDiv');
+        iframeContainer.appendChild(iframe);
+    </script>
+
+  </body>
+  
+</html>

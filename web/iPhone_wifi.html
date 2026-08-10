@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <!-- 必须的 meta 标签 -->
+    <meta charset="utf-8">
+    <link rel="shortcut icon" href="static/favicon.ico">
+    <link rel="stylesheet" href="static/bootstrap.min.css">
+    <link rel="stylesheet" href="static/hogan_853x480.css">
+    <title>iPhone_NoVnc控制</title> 
+    <style>
+      body {
+        background-color: #CCCCCC;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="static/jquery.slim.min.js"></script>
+    <script src="static/bootstrap.bundle.min.js"></script>
+    <script>
+      window.addEventListener('DOMContentLoaded', function() {
+        fetch('static/导航.html')
+          .then(response => response.text())
+          .then(data => {
+            document.getElementById('nav-placeholder').innerHTML = data;
+          });
+      });
+    </script>
+    <div id="nav-placeholder"></div>
+
+    <div class="iframe-container" id="myDiv_wifi"></div>
+    
+    <script>
+        // 获取查询参数部分
+        var queryString = window.location.search;
+
+        // 解析查询参数为一个对象
+        var params = new URLSearchParams(queryString);
+
+        // 获取变量值 - 只需要 IP
+        var ip = params.get('IP');
+
+        // 构建 iframe 的 src 属性值 - 使用新的 NoVNC 地址
+        var iframeSrc = 'http://172.16.102.229:8080/vnc_lite.html?host=' + ip + '&port=5901';
+
+        // 创建 iframe 元素
+        var iframe = document.createElement('iframe');
+        iframe.src = iframeSrc;
+        iframe.id = 'vnc-iframe';
+
+        // 将 iframe 添加到容器中
+        var iframeContainer = document.getElementById('myDiv_wifi');
+        iframeContainer.appendChild(iframe);
+
+        // 监听来自 iframe 的 postMessage 事件
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'vnc-orientation') {
+                var isLandscape = event.data.orientation === 'landscape';
+                if (isLandscape) {
+                    iframeContainer.classList.add('landscape');
+                } else {
+                    iframeContainer.classList.remove('landscape');
+                }
+            }
+        });
+
+        // 备用方案：默认先显示横屏
+        iframeContainer.classList.add('landscape');
+    </script>
+  </body>
+  
+</html>

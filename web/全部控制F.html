@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <!-- 必须的 meta 标签 -->
+    <meta charset="utf-8">
+    <link rel="shortcut icon" href="static/favicon.ico">
+    <link rel="stylesheet" href="static/bootstrap.min.css">
+    <title>宏聚网络_NoVnc全部控制</title>
+    <style>
+      body {
+        background-color: #CCCCCC;
+      }
+      /* ----------------- 完全保留的原始样式 ----------------- */
+      /* 横屏模式 - 两列布局，不使用旋转，只要有一个手机横屏就用这个 */
+      .iframe-container.landscape-mode {
+        width: 2559px;  /* 原来的高度 */
+        height: 960px;   /* 原来的宽度 */
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+      }
+      .iframe-container.landscape-mode iframe {
+        position: absolute;
+        width: 853px;   /* 原来的高度，横屏尺寸 */
+        height: 480px;  /* 原来的宽度，横屏尺寸 */
+        box-sizing: content-box;
+        border: none;
+      }
+      /* 重新排列位置，不使用旋转，互换 left 和 top */
+      .iframe-container.landscape-mode .iframe1 {
+        top: 0;
+        left: 0;
+      }
+      .iframe-container.landscape-mode .iframe2 {
+        top: 0;
+        left: 853px;
+      }
+      .iframe-container.landscape-mode .iframe3 {
+        top: 0;
+        left: 1706px;
+      }
+      .iframe-container.landscape-mode .iframe4 {
+        top: 480px;
+        left: 426.5px;  /* 水平居中 */
+      }
+      .iframe-container.landscape-mode .iframe5 {
+        top: 480px;
+        left: 1279.5px; /* 水平居中 */
+      }
+      /* 竖屏模式 - 一行5个布局，只有全部手机都是竖屏才用这个 */
+      .iframe-container.portrait-mode {
+        width: 2560px;
+        height: 426px;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+      }
+      .iframe-container.portrait-mode iframe {
+        width: 480px;
+        height: 853px;
+        box-sizing: content-box;
+        border: none;
+        /* 等比例缩放：512/480 ≈ 1.0667，刚好填满2K屏幕宽度 */
+        transform: scale(1.0666667);
+        transform-origin: center center;
+      }
+      /* ----------------- 只加同步功能的样式 ----------------- */
+      .master-select {
+        position: absolute;
+        top: 5px;
+        z-index: 100;
+        background: rgba(255,255,255,0.95);
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        display: none;
+      }
+      .sync-enabled .master-select {
+        display: block;
+      }
+      .master-select.active {
+        background: rgba(40,167,69,0.95);
+        color: white;
+      }
+      /* 横屏模式下主控按钮的位置 */
+      .landscape-mode .master1 { left: 5px; top: 5px; }
+      .landscape-mode .master2 { left: 858px; top: 5px; }
+      .landscape-mode .master3 { left: 1711px; top: 5px; }
+      .landscape-mode .master4 { left: 431.5px; top: 485px; }
+      .landscape-mode .master5 { left: 1284.5px; top: 485px; }
+      /* 移除固定的竖屏模式位置，改用JS动态设置 */
+    </style>
+  </head>
+  <body>
+    <script src="static/jquery.slim.min.js"></script>
+    <script src="static/bootstrap.bundle.min.js"></script>
+    <script>
+      window.addEventListener('DOMContentLoaded', function() {
+        fetch('static/导航.html')
+          .then(response => response.text())
+          .then(data => {
+            document.getElementById('nav-placeholder').innerHTML = data;
+          });
+      });
+    </script>
+    <div id="nav-placeholder"></div>
+    <div style="text-align: center;">
+      <button id="CangKuRuKu" type="button" class="btn btn-outline-primary" >仓库入库</button>
+      <button id="BeiBaoChuShou" type="button" class="btn btn-outline-primary" >背包出售</button>
+      <!-- 只加同步按钮 -->
+      <button id="syncOperation" type="button" class="btn btn-outline-primary" >开启同步操作</button>
+      <!-- ----------------- 只加这一个设置剪贴板按钮 ----------------- -->
+      <button id="SheZhiJianTieBan" type="button" class="btn btn-outline-primary" >设置剪贴板</button>
+    </div>
+    <!-- ----------------- 完全保留的原始批量操作代码 ----------------- -->
+    <script>
+        var CangKuRuKu = document.getElementById('CangKuRuKu');
+        var BeiBaoChuShou = document.getElementById('BeiBaoChuShou');
+        var SheZhiJianTieBan = document.getElementById('SheZhiJianTieBan');
+        CangKuRuKu.addEventListener('click', function() {
+            for (var i = 1; i <= 5; i++) {
+                var targetUrl = 'http://172.16.103.' + i + ':8080/control/start_playing?path=%2F%E4%BB%93%E5%BA%93%E5%85%A5%E5%BA%93.lua';
+                fetch(targetUrl, { method: 'GET', mode: 'cors' }).catch(e=>{});
+            }
+        });
+        BeiBaoChuShou.addEventListener('click', function() {
+            for (var i = 1; i <= 5; i++) {
+                var targetUrl = 'http://172.16.103.' + i + ':8080/control/start_playing?path=%2F%E8%83%8C%E5%8C%85%A5%E5%87%BA%E5%94%AE.lua';
+                fetch(targetUrl, { method: 'GET', mode: 'cors' }).catch(e=>{});
+            }
+        });
+        // ----------------- 只加这一个设置剪贴板按钮的点击事件 -----------------
+        SheZhiJianTieBan.addEventListener('click', function() {
+            const text = prompt('请输入要粘贴的文字：');
+            if (text && text.trim()) {
+                ['iframe-1', 'iframe-2', 'iframe-3', 'iframe-4', 'iframe-5'].forEach(id => {
+                    const targetIframe = document.getElementById(id);
+                    if (targetIframe && targetIframe.contentWindow) {
+                        targetIframe.contentWindow.postMessage({
+                            type: 'sync-clipboard',
+                            text: text
+                        }, '*');
+                    }
+                });
+            }
+        });
+    </script>
+    <!-- ----------------- 完全保留的原始iframe结构 ----------------- -->
+    <div class="iframe-container landscape-mode" id="multi-iframe-container">
+      <!-- 只加5个绝对定位的主控按钮，不碰原来的iframe -->
+      <label class="master-select master1 active">
+        <input type="radio" name="master" value="172.16.103.26" checked> 主控
+      </label>
+      <label class="master-select master2">
+        <input type="radio" name="master" value="172.16.103.27"> 主控
+      </label>
+      <label class="master-select master3">
+        <input type="radio" name="master" value="172.16.103.28"> 主控
+      </label>
+      <label class="master-select master4">
+        <input type="radio" name="master" value="172.16.103.29"> 主控
+      </label>
+      <label class="master-select master5">
+        <input type="radio" name="master" value="172.16.103.30"> 主控
+      </label>
+      <!-- 原来的iframe结构一点都不动 -->
+      <iframe class="iframe1" id="iframe-1" src="http://172.16.102.229:8080/vnc_lite.html?host=172.16.103.26&port=5901"></iframe>
+      <iframe class="iframe2" id="iframe-2" src="http://172.16.102.229:8080/vnc_lite.html?host=172.16.103.27&port=5901"></iframe>
+      <iframe class="iframe3" id="iframe-3" src="http://172.16.102.229:8080/vnc_lite.html?host=172.16.103.28&port=5901"></iframe>
+      <iframe class="iframe4" id="iframe-4" src="http://172.16.102.229:8080/vnc_lite.html?host=172.16.103.29&port=5901"></iframe>
+      <iframe class="iframe5" id="iframe-5" src="http://172.16.102.229:8080/vnc_lite.html?host=172.16.103.30&port=5901"></iframe>
+    </div>
+    <!-- ----------------- 完全保留的原始方向检测代码 ----------------- -->
+    <script>
+        var iframeOrientations = {
+            'iframe-1': null,
+            'iframe-2': null,
+            'iframe-3': null,
+            'iframe-4': null,
+            'iframe-5': null
+        };
+        var container = document.getElementById('multi-iframe-container');
+        window.addEventListener('message', function(event) {
+            // ----------------- 完全保留原始方向检测 -----------------
+            if (event.data && event.data.type === 'vnc-orientation') {
+                for (var id in iframeOrientations) {
+                    var iframe = document.getElementById(id);
+                    if (iframe && iframe.contentWindow === event.source) {
+                        iframeOrientations[id] = event.data.orientation;
+                        break;
+                    }
+                }
+                updateLayout();
+            }
+            // ----------------- 只加同步消息处理（鼠标+键盘） -----------------
+            if (syncEnabled && event.data && event.data.type === 'vnc-mouse-event' && event.data.host === mainHost) {
+                const eventData = {
+                    type: 'sync-mouse-event',
+                    eventType: event.data.eventType,
+                    x: event.data.x,
+                    y: event.data.y,
+                    buttons: event.data.buttons
+                };
+                allIframes.forEach(iframe => {
+                    const iframeHost = new URL(iframe.src).searchParams.get('host');
+                    if (iframeHost !== mainHost && iframe && iframe.contentWindow) {
+                        iframe.contentWindow.postMessage(eventData, '*');
+                    }
+                });
+            }
+            if (syncEnabled && event.data && event.data.type === 'vnc-key-event' && event.data.host === mainHost) {
+                const eventData = {
+                    type: 'sync-key-event',
+                    eventType: event.data.eventType,
+                    keysym: event.data.keysym,
+                    code: event.data.code
+                };
+                allIframes.forEach(iframe => {
+                    const iframeHost = new URL(iframe.src).searchParams.get('host');
+                    if (iframeHost !== mainHost && iframe && iframe.contentWindow) {
+                        iframe.contentWindow.postMessage(eventData, '*');
+                    }
+                });
+            }
+            if (syncEnabled && event.data && event.data.type === 'vnc-wheel-event' && event.data.host === mainHost) {
+                const eventData = {
+                    type: 'sync-wheel-event',
+                    deltaY: event.data.deltaY,
+                    deltaX: event.data.deltaX,
+                    x: event.data.x,
+                    y: event.data.y
+                };
+                allIframes.forEach(iframe => {
+                    const iframeHost = new URL(iframe.src).searchParams.get('host');
+                    if (iframeHost !== mainHost && iframe && iframe.contentWindow) {
+                        iframe.contentWindow.postMessage(eventData, '*');
+                    }
+                });
+            }
+        });
+        function updateLayout() {
+            var allPortrait = true;
+            var hasLandscape = false;
+            for (var id in iframeOrientations) {
+                var orientation = iframeOrientations[id];
+                if (orientation === 'landscape') {
+                    hasLandscape = true;
+                    allPortrait = false;
+                } else if (orientation === 'portrait') {
+                    // 这个是竖屏
+                } else {
+                    // 还没有收到方向信息，先不算全部竖屏
+                    allPortrait = false;
+                }
+            }
+            // 只有当全部都是竖屏时，才用竖屏模式（一行5个布局）
+            // 只要有一个横屏，或者不是全部竖屏，就用横屏模式（两列布局）
+            if (allPortrait) {
+                container.classList.remove('landscape-mode');
+                container.classList.add('portrait-mode');
+            } else {
+                container.classList.remove('portrait-mode');
+                container.classList.add('landscape-mode');
+            }
+            // ----------------- 关键修复：动态设置每个主控按钮的位置 -----------------
+            setTimeout(function() {
+                const containerRect = container.getBoundingClientRect();
+                for (let i = 1; i <= 5; i++) {
+                    const iframe = document.getElementById('iframe-' + i);
+                    const masterBtn = document.querySelector('.master' + i);
+                    if (iframe && masterBtn) {
+                        const iframeRect = iframe.getBoundingClientRect();
+                        masterBtn.style.left = (iframeRect.left - containerRect.left + 5) + 'px';
+                        masterBtn.style.top = (iframeRect.top - containerRect.top + 5) + 'px';
+                    }
+                }
+            }, 50);
+            // ----------------- 只加同步方向不一致保护 -----------------
+            if (syncEnabled) {
+                let orientations = Object.values(iframeOrientations);
+                if (orientations.includes(null) || !orientations.every(ori => ori === orientations[0])) {
+                    syncEnabled = false;
+                    syncBtn.textContent = '开启同步操作';
+                    syncBtn.classList.remove('btn-outline-danger');
+                    syncBtn.classList.add('btn-outline-primary');
+                    container.classList.remove('sync-enabled');
+                    alert('检测到设备方向不一致，已自动关闭同步');
+                }
+            }
+        }
+    </script>
+    <!-- ----------------- 只加同步功能的JS代码 ----------------- -->
+    <script>
+        let syncEnabled = false;
+        let mainHost = '172.16.103.26';
+        const syncBtn = document.getElementById('syncOperation');
+        const allIframes = [
+            document.getElementById('iframe-1'),
+            document.getElementById('iframe-2'),
+            document.getElementById('iframe-3'),
+            document.getElementById('iframe-4'),
+            document.getElementById('iframe-5')
+        ];
+        // 同步开关
+        syncBtn.addEventListener('click', function() {
+            if (!syncEnabled) {
+                let orientations = Object.values(iframeOrientations);
+                if (orientations.includes(null)) {
+                    alert('正在加载设备方向信息，请稍等1-2秒后再试');
+                    return;
+                }
+                if (!orientations.every(ori => ori === orientations[0])) {
+                    alert('所有设备屏幕方向必须一致才能开启同步');
+                    return;
+                }
+                syncEnabled = true;
+                syncBtn.textContent = '关闭同步操作';
+                syncBtn.classList.remove('btn-outline-primary');
+                syncBtn.classList.add('btn-outline-danger');
+                container.classList.add('sync-enabled');
+            } else {
+                syncEnabled = false;
+                syncBtn.textContent = '开启同步操作';
+                syncBtn.classList.remove('btn-outline-danger');
+                syncBtn.classList.add('btn-outline-primary');
+                container.classList.remove('sync-enabled');
+            }
+        });
+        // 主控选择
+        document.querySelectorAll('input[name=master]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    mainHost = this.value;
+                    document.querySelectorAll('.master-select').forEach(label => {
+                        label.classList.remove('active');
+                        if (label.querySelector('input').checked) label.classList.add('active');
+                    });
+                }
+            });
+        });
+    </script>
+  </body>
+</html>

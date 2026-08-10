@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <!-- 必须的 meta 标签 -->
+    <meta charset="utf-8">
+    <link rel="shortcut icon" href="static/favicon.ico">
+    <link rel="stylesheet" href="static/bootstrap.min.css">
+    <link rel="stylesheet" href="static/hogan.css">
+    <title>NoVnc控制台</title> 
+    <style>
+      body {
+        background-color: #CCCCCC;
+      }
+      img{
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          margin: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="static/jquery.slim.min.js"></script>
+    <script src="static/bootstrap.bundle.min.js"></script>
+    <script>
+      window.addEventListener('DOMContentLoaded', function() {
+        fetch('static/导航.html')
+          .then(response => response.text())
+          .then(data => {
+            document.getElementById('nav-placeholder').innerHTML = data;
+          });
+      });
+    </script>
+    <div id="nav-placeholder"></div>
+    <img src="https://webinput.nie.netease.com/img/xy3d/logo.png" alt="logo">
+  </body>
+  
+</html>
